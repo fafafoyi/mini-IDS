@@ -48,3 +48,14 @@ for i, port in enumerate(range(1, 300)):
     ts = scan_start + i * 0.01
     add_pkt (attacker, victim, 40000 +i, port, "S", ts)
 LABELS.append([int(scan_start // 60) * 60, attacker, "portscan"])
+
+# SYN FLOOD (attacker 10.0.0.98 -> victim 10.0.0.51:80, thousands of SYNs, no ACK)
+
+flood_start = BASE_TIME + 120
+attacker2 = f"{INTERNAL_NET}98"
+victim2 = f"{INTERNAL_NET}51"
+
+for i in range(1500):
+    ts = flood_start + i * 0.002   # 1500 SYNs in 3 seconds
+    add_pkt(attacker2, victim2, random.randint(1024, 655535), 80, "S", ts)
+LABELS.append([int(flood_start // 60) * 60, attacker2, "synflood"])
