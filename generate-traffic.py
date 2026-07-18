@@ -19,7 +19,7 @@ def add_pkt(src, dst, sport, dport, flags, t, payload= None):
     PACKETS.append(pkt)
 
 
-# 1. Normal Traffic
+#  Normal Traffic
 # Many internal hosts making a handful of ordinary connections
 # (web/dns/HTTPS-like ports) ar a modest rate full-ish handshake
 
@@ -39,7 +39,7 @@ for host_id in range (2, 40):
         add_pkt(dst, src, dport, sport , "FA", conn_t + 0.05)
         LABELS.append([int(conn_t // 60) * 60, src ,"normal"])
 
-# 2. PORT SCAN (attacker 10.0.0.99 => victim 10.0.0.50, mant dst ports, fast, SYN-only)
+#  PORT SCAN (attacker 10.0.0.99 => victim 10.0.0.50, mant dst ports, fast, SYN-only)
 
 scan_start = BASE_TIME + 50
 attacker = f"{INTERNAL_NET}99"
