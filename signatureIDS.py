@@ -82,3 +82,21 @@ for w, per_src in state.items():
         if e["payload_hit"]:
             fired.append(("payload", 1))
         
+        if fired:
+            #priority : worst/most spesific rule wins if several fire at once
+            priority = {"payload": 4, "synflood":3, "portscan":2, "bruteforce":1}
+            fired.sort(key=lambda x: priority[x[0]], reverse=True)
+            alerts.append({
+                "window_start": w,
+                "src_ip": src,
+                "sig_prediction": fired[0][0],
+                "sig_evidence": fired[0][1],
+                "sig_all_rules_fired": ",".join(f[0]for f in fired),
+            })
+return pd.Dataframe(alerts)
+
+if __name__ == "__main__":
+    df = run_signature_ids("data/traffic.pcap")
+    df.to_csv("data/signature_alerts.csv", index=False)
+    print(f"Signature IDS raised {len(df)} alerts")
+    print(df["sig_prediction"].value_counts())
