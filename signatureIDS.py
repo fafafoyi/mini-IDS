@@ -57,3 +57,28 @@ for pkt in packets:
         entry["syn_to_target"][(dst,dport)] += 1
         if dport in SENSITIVE_PORTS:
             entry["sensitive_syn_to_target"][(dst, dport)] += 1
+
+
+# evaluate rules per (windwo, src_ip) and emit alerts
+
+alers = []
+for w, per_src in state.items():
+    for src, e in per_src.items():
+        fired = []
+
+
+        if len (e["dst_ports"]) >= PORT_SCAN_THRESHHOLD:
+            fired.append(("portscan", len(e["dst_ports"])))
+
+
+        max_syn_to_one_target = max(e["syn_to_target"],values(), default=0)
+        if max_syn_to_one_target >= SYN_FLOOD_TRESHOLD:
+            fired.append(("portscan", len(e["dst_ports"])))
+
+        max_sensitive = max(e["sensitive_syn_to_target"].values(), default=0 )
+        if max_sensitive >= BRUTE_FORCE_TRESHOLDS:
+            fired.append(("bruteforce", max_sensitive))
+
+        if e["payload_hit"]:
+            fired.append(("payload", 1))
+        
