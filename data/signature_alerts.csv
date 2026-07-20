@@ -1,0 +1,8 @@
+window_start,src_ip,sig_prediction,sig_evidence,sig_all_rules_fired
+1700000040,10.0.0.99,portscan,299,portscan
+1700000100,10.0.0.98,portscan,1,portscan
+1700000160,10.0.0.97,bruteforce,40,bruteforce
+1700000160,10.0.0.52,portscan,40,portscan
+1700000220,10.0.0.97,bruteforce,40,bruteforce
+1700000220,10.0.0.52,portscan,40,portscan
+1700000220,10.0.0.96,payload,1,payload
