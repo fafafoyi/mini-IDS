@@ -76,19 +76,19 @@ results.append(report("Anomaly-based IDS (IsolationForest)", y_anom))
 
 # Signature IDS attack-type accuracy (only it makes a typed prediction)
 
-matched = df[df["sig_flag"] & df["is_attacked"]]
+matched = df[df["sig_flag"] & df["is_attack"]]
 correct_type =(matched["sig_prediction"] == matched["label"]).sum()
 print(f"\nSignature IDS attack_TYPE accuracy on true positives: "
         f"{correct_type}/{len(matched)}"
         f"({(correct_type/len(matched)*100 if len(matched)else 0):.1f}%)"
 )
 print("\nWhich rule fired for each true attack (recall by attack class)")
-for label_name in osrted(set(labels["label"])- {"normal"}):
+for label_name in sorted(set(labels["label"])- {"normal"}):
     subset = df[df["label"] == label_name]
     caught_sig = subset["sig_flag"].sum()
     caught_anom = subset["anom_flag"].sum()
     print(f"   {label_name:12s}: total={len(subset):2d}"
-            f"caught_by_signature={caught_sig}  caught_by_anomaly = {caught_anom}")
+        f"caught_by_signature={caught_sig}  caught_by_anomaly = {caught_anom}")
 
 # Comparison chart
 
@@ -117,8 +117,8 @@ ax2.set_xticklabels(["Signature", "Anomaly"], rotation=0)
 ax2.grid(axis ="y", alpha=0.3)
 
 plt.tight_layout()
-plt.savefig("data/comparison.png", dpi=140)
-print("\nSaved comparison chart -> data/comparison.png")
+plt.savefig("outputs/comparison.png", dpi=140)
+print("\nSaved comparison chart -> outputs/comparison.png")
 
-res_df.to_csv("data/metrics_summary.csv", index=False)
-print("Saved metrics table -> data/metrics_summary.csv")
+res_df.to_csv("outputs/metrics_summary.csv", index=False)
+print("Saved metrics table -> outputs/metrics_summary.csv")
