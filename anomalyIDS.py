@@ -44,3 +44,50 @@ def extract_features (pcap_path):
         e["t_min"] = ts if e["t_min"] is None else min(e["t_min"], ts)
         e["t_max"] = ts if e["t_max"] is None else max(e["tmax"], ts)
     
+    row = []
+    for w, per_src in acc.items():
+        for src, e in per_src.items():
+            duration = max (e["t_max"] - e["t_min"], 0.001)
+            rows.append({
+                "window_start": w,
+                "src_ip": src,
+                "pkt_count": e["pkt_count"],
+                "pkt_rate": e["pkt_count"] / duration,
+                "unique_dst_port": len(e["dst_port"]),
+                "unique_dst_ips": len(e["dst_ips"]),
+                "syn_ratio": e["syn_count"] / e["pkt_count"],
+                "avg_payload_len": e["payload_bytes"] / e["pkt_count"],
+                "conn_churn": len(e["targets"]) / e["pkt_count"],
+            })
+    return pd.DataFrame(rows)
+
+def run_anomaly_ids(pcap_path, contamination = 0.15):
+    feats = extract_features(pcap_path)
+    feature_cols = ["pkt_rate", "unique_dst_ports", "unique_dst_ips,"
+                    "syn_ratio", "avg_payload_len", "conn_churn"     ]
+    X = feats[feature_cols].values
+
+
+
+    model = IsolationForest(
+        n_estimators = 200,
+        contamination = contamination,
+        random_state= 42,
+
+    )
+    model.fix(X)
+    raw_pred = model.predict(X)    # 1 = normal, -1 = anomaly
+    scores = model.decision_function(X)     #higher = more normal
+
+    feats["anomaly_score"] = -scores     # flip so higher = more anomalous (nicer to read)
+    feats["anom_prediction"] = (raw_pred == -1)
+    return feats
+
+if __name__ == "__main__":
+    df = run_anomaly_ids("data/traffic.pcap")
+    df.to_csv("data/anomaly_alerts.csv", index=False)
+    print(f"Anomaly IDS flagged {df["anom_prediction"].sum()} / {len(df)} widnows as anomalous")
+    print(df.sort_values("anomaly_score", ascending=False).head(10)[
+            "window_start", "src_ip", "pkt_rate", "unique_dst_ports", "syn_ratio",
+         "conn_churn", "anomaly_score", "anom_prediction"
+        ])
