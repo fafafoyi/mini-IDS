@@ -2,8 +2,8 @@ import subprocess, sys, os
 
 STEPS = [
     ("Generating synthetic labeled traffic", "generate_traffic.py"),
-    ("Running signature-based (rule) IDS",   "signature_ids.py"),
-    ("Running anomaly_based (ML) IDS",       "anomaly_ids.py"),
+    ("Running signature-based (rule) IDS",   "signatureIDS.py"),
+    ("Running anomaly_based (ML) IDS",       "anomalyIDS.py"),
     ("Evaluating & comparing detectors",    "evaluate.py"),
 ]
 
