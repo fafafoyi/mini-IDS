@@ -1,4 +1,4 @@
-from scapy.all import rdrcap, TCP, IP, Raw
+from scapy.all import rdpcap, TCP, IP, Raw
 from collections import defaultdict
 import pandas as pd
 from sklearn.ensemble import IsolationForest
@@ -20,7 +20,7 @@ def extract_features (pcap_path):
         "payload_bytes": 0,
         "targets": set(),
         "t_min": None,
-        "t_min": None,
+        "t_max": None,
     }))
 
     for pkt in packets:
@@ -42,9 +42,9 @@ def extract_features (pcap_path):
         if pkt.haslayer(Raw):
             e["payload_bytes"] += len(bytes(pkt[Raw].load))
         e["t_min"] = ts if e["t_min"] is None else min(e["t_min"], ts)
-        e["t_max"] = ts if e["t_max"] is None else max(e["tmax"], ts)
+        e["t_max"] = ts if e["t_max"] is None else max(e["t_max"], ts)
     
-    row = []
+    rows = []
     for w, per_src in acc.items():
         for src, e in per_src.items():
             duration = max (e["t_max"] - e["t_min"], 0.001)
@@ -53,7 +53,7 @@ def extract_features (pcap_path):
                 "src_ip": src,
                 "pkt_count": e["pkt_count"],
                 "pkt_rate": e["pkt_count"] / duration,
-                "unique_dst_port": len(e["dst_port"]),
+                "unique_dst_ports": len(e["dst_ports"]),
                 "unique_dst_ips": len(e["dst_ips"]),
                 "syn_ratio": e["syn_count"] / e["pkt_count"],
                 "avg_payload_len": e["payload_bytes"] / e["pkt_count"],
@@ -63,7 +63,7 @@ def extract_features (pcap_path):
 
 def run_anomaly_ids(pcap_path, contamination = 0.15):
     feats = extract_features(pcap_path)
-    feature_cols = ["pkt_rate", "unique_dst_ports", "unique_dst_ips,"
+    feature_cols = ["pkt_rate", "unique_dst_ports", "unique_dst_ips",
                     "syn_ratio", "avg_payload_len", "conn_churn"     ]
     X = feats[feature_cols].values
 
@@ -75,7 +75,7 @@ def run_anomaly_ids(pcap_path, contamination = 0.15):
         random_state= 42,
 
     )
-    model.fix(X)
+    model.fit(X)
     raw_pred = model.predict(X)    # 1 = normal, -1 = anomaly
     scores = model.decision_function(X)     #higher = more normal
 
@@ -88,6 +88,7 @@ if __name__ == "__main__":
     df.to_csv("data/anomaly_alerts.csv", index=False)
     print(f"Anomaly IDS flagged {df["anom_prediction"].sum()} / {len(df)} widnows as anomalous")
     print(df.sort_values("anomaly_score", ascending=False).head(10)[
-            "window_start", "src_ip", "pkt_rate", "unique_dst_ports", "syn_ratio",
-         "conn_churn", "anomaly_score", "anom_prediction"
-        ])
+    ["window_start", "src_ip", "pkt_rate", "unique_dst_ports", "syn_ratio",
+     "conn_churn", "anomaly_score", "anom_prediction"]
+])
+    

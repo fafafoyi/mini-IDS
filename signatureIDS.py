@@ -61,17 +61,17 @@ def run_signature_ids(pcap_path):
 
     # evaluate rules per (windwo, src_ip) and emit alerts
 
-    alers = []
+    alerts = []
     for w, per_src in state.items():
         for src, e in per_src.items():
             fired = []
 
 
-            if len (e["dst_ports"]) >= PORT_SCAN_THRESHHOLD:
+            if len (e["dst_ports"]) >= PORT_SCAN_THRESHOLD:
                 fired.append(("portscan", len(e["dst_ports"])))
 
 
-            max_syn_to_one_target = max(e["syn_to_target"],values(), default=0)
+            max_syn_to_one_target = max(e["syn_to_target"].values(), default=0)
             if max_syn_to_one_target >= SYN_FLOOD_TRESHOLD:
                 fired.append(("portscan", len(e["dst_ports"])))
 

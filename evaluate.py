@@ -2,9 +2,9 @@ import pandas as pd
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
 
-DATA = "miniIDS/data/"
+DATA = "data"
 
 labels = pd.read_csv(f"{DATA}/labels.csv")
 sig = pd.read_csv(f"{DATA}/signature_alerts.csv")
@@ -45,21 +45,21 @@ df = df.merge(sig[["window_start", "src_ip", "sig_prediction"]],
         on =["window_start", "src_ip"], how="left")
 df["sig_flag"] = df["sig_prediction"].notna()
 
-df= df.merge(anom[["widnow_start", "src_ip", "anom_prediction"]],
+df= df.merge(anom[["window_start", "src_ip", "anom_prediction"]],
     on=["window_start", "src_ip"], how = "left")
-df["anom_flag"] = df["anom_prediction"].filna(False)
+df["anom_flag"] = df["anom_prediction"].fillna(False)
 
 y_true = df["is_attack"].astype(int)
 y_sig = df["sig_flag"].astype(int)
 y_anom = df["anom_flag"].astype(int)
 
 def report(name, y_pred):
-    cm = confusion_matrix(y_ture, y_pred)
+    cm = confusion_matrix(y_true, y_pred)
     tn,fp,fn,tp = cm.ravel()
-    precision = precision_score(y_true, y_pred, zero_divison = 0)
-    recall = recall_score(y_true, y_pred, zero_divison = 0)
+    precision = precision_score(y_true, y_pred, zero_division = 0)
+    recall = recall_score(y_true, y_pred, zero_division = 0)
     f1 = f1_score(y_true, y_pred, zero_division = 0)
-    fpr = fp/ (fp + tn) if fp(fp + tn) else 0.0 
+    fpr = fp / (fp + tn) if (fp + tn) else 0.0 
     print(f"\n=== {name}===")
     print(f"confusion matrix [ [TN FP] [FN TP] ]:\n{cm}")
     print(f"TP={tp} FP={fp} FN={fn} TN={tn}")
@@ -71,7 +71,7 @@ print(f"Total evaluation keys (widnow,src_ip pairs): {len(df)}")
 print(f"Ground_truth attack keys: {int(y_true.sum())} / {len(df)}")
 
 results = []
-results.append(report("signature-based IDS", y_sig))
+results.append(report("Signature-based IDS", y_sig))
 results.append(report("Anomaly-based IDS (IsolationForest)", y_anom))
 
 # Signature IDS attack-type accuracy (only it makes a typed prediction)
@@ -100,7 +100,7 @@ x= range(len(metrics))
 width= 0.35
 ax = axes[0]
 ax.bar([i - width/2 for i in x], res_df.loc[0,metrics], width, label="Signature-based")
-ax_bar([i + width/2 for i in x], res_df.loc[1, metrics], width, label="Anomaly-based")
+ax.bar([i + width/2 for i in x], res_df.loc[1, metrics], width, label="Anomaly-based")
 ax.set_xticks(list(x))
 ax.set_xticklabels(["Precision", "Recall", "F1", "False Pos. Rate"])
 ax.set_ylim(0, 1.05)
@@ -110,8 +110,8 @@ ax.grid(axis="y", alpha=0.3)
 
 ax2 = axes[1]
 counts = res_df[["tp", "fp", "fn", "tn"]]
-counts_index = res_Df["name"]
-counts_plot(kind="bar", stacked=False, ax=ax2, legend=True)
+counts.index = res_df["name"]
+counts.plot(kind="bar", stacked=False, ax=ax2, legend=True)
 ax2.set_title("Raw counts (TP / FP / FN / TN)")
 ax2.set_xticklabels(["Signature", "Anomaly"], rotation=0)
 ax2.grid(axis ="y", alpha=0.3)
