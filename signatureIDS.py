@@ -1,3 +1,38 @@
+"""
+signature_ids.py
+-----------------
+A rule-based (signature) IDS. Reads a pcap, replays packets in time order,
+and applies hand-written rules that mirror what Snort/Suricata rules do
+conceptually (threshold-based rules + content matching), just implemented
+directly in Python with scapy for transparency/teaching purposes.
+ 
+Detection windowing:
+  I bucketed time into fixed windows (default 60s) and key state per
+  (src_ip) or (src_ip, dst_ip) inside that window, matching how the
+  ground-truth labels in labels.csv are keyed. This keeps signature_ids.py
+  and anomaly_ids.py directly comparable in evaluate.py.
+ 
+Rules implemented:
+  R1 PORT_SCAN   : a src_ip contacts >= PORT_SCAN_THRESHOLD distinct dst
+                    ports (any dst_ip) within one window using SYN packets
+                    that never complete a handshake back.
+  R2 SYN_FLOOD    : a src_ip sends >= SYN_FLOOD_THRESHOLD SYN packets to a
+                    single (dst_ip, dst_port) within one window.
+  R3 BRUTE_FORCE  : a src_ip opens >= BRUTE_FORCE_THRESHOLD separate TCP
+                    connections (each with its own SYN) to the same
+                    (dst_ip, dst_port) on a sensitive port (22, 23, 3389, 21)
+                    within one window.
+  R4 PAYLOAD_MATCH: any packet whose payload contains a known bad-signature
+                    byte string (analogous to a Snort "content:" rule).
+ 
+Output: a DataFrame / CSV of alerts, one row per (window_start, src_ip),
+with the highest-priority rule that fired, so it can be compared 1:1
+against data/labels.csv in evaluate.py.
+"""
+
+
+
+
 from scapy.all import rdpcap, TCP, IP, Raw
 from collections import defaultdict
 import pandas as pd

@@ -1,3 +1,41 @@
+"""
+anomaly_ids.py
+---------------
+A statistical / ML anomaly-based IDS. Unlike signature_ids.py (which knows
+exactly what a port scan or a bad payload looks like), this detector has
+NO built-in knowledge of attacks. It only learns "what normal looks like"
+from a baseline of traffic and flags anything that deviates.
+ 
+Step 1: Feature extraction (per src_ip, per time window same keying as
+         signature_ids.py so results line up in evaluate.py):
+    - pkt_count        : total packets sent by src in the window
+    - pkt_rate         : packets / second
+    - unique_dst_ports : distinct destination ports contacted (scan-like)
+    - unique_dst_ips   : distinct destination hosts contacted (churn)
+    - syn_ratio        : fraction of packets that are bare SYNs
+                          (high => scanning/flooding, never completing)
+    - avg_payload_len  : average payload size (very small avg => flood/scan
+                          traffic that's mostly empty control packets)
+    - conn_churn       : unique (dst_ip,dst_port) pairs / pkt_count
+                          (near 1.0 => every packet opens a new target,
+                           typical of scans; low => a few sustained flows)
+ 
+Step 2: Model
+    I used scikit-learn's IsolationForest, an unsupervised model that
+    isolates points via random recursive splits, anomalies need fewer
+    splits to isolate than normal points, so they get a high anomaly score.
+    It is trained on ALL the extracted feature vectors (unsupervised: it
+    never sees the labels), which mirrors real deployment where you don't
+    have labeled attacks in production, only "mostly normal" traffic.
+ 
+Step 3: Output
+    A binary anomaly flag (-1 = anomaly / 1 = normal from sklearn. I remap
+    to True/False) plus the anomaly score, per (window_start, src_ip), so
+    it can be compared against the same ground truth as signature_ids.py.
+"""
+
+
+
 from scapy.all import rdpcap, TCP, IP, Raw
 from collections import defaultdict
 import pandas as pd

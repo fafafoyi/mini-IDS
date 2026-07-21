@@ -1,3 +1,27 @@
+"""
+generate_traffic.py
+--------------------
+Creates a SYNTHETIC, LABELED pcap file that mixes normal traffic with four
+classic attack patterns. I generated my own data (rather than downloading
+CICIDS2017) because this sandbox has no internet access to the dataset
+mirrors but the pipeline downstream (signature_ids.py, anomaly_ids.py,
+evaluate.py) is dataset-agnostic: point it at a real CICIDS2017 pcap +
+label CSV and it works unchanged.
+ 
+Ground truth is written to a side-car CSV: data/labels.csv, keyed by
+(src_ip, window_start) since that's the granularity our detectors reason
+at (they look at *behavior over a time window*, not single packets).
+ 
+Attacks simulated:
+  1. Port scan      -> one src IP hits many distinct ports on one dst, fast
+  2. SYN flood      -> one src IP fires many SYN packets at one port, no handshake
+  3. Brute force    -> one src IP repeatedly connects to port 22/3389 on one dst
+  4. Malicious payload -> a normal-looking flow carries a known-bad byte pattern
+                          (simulates a signature like a C2 beacon or exploit string)
+"""
+
+
+
 import random
 from scapy.all import IP, TCP, Raw, Ether, wrpcap
 import csv

@@ -1,3 +1,20 @@
+"""
+evaluate.py
+------------
+Ties everything together:
+  1. Loads ground truth labels (data/labels.csv) -> keyed by (window_start, src_ip)
+  2. Loads signature IDS alerts and anomaly IDS alerts (same key)
+  3. Reduces the multi-class ground truth to a BINARY task (attack vs normal)
+     so both detectors, one multi-class-aware and one purely binary, can be
+     compared fairly on the same footing.
+  4. Computes confusion matrix, precision, recall, F1, and false positive
+     rate for each detector.
+  5. Also reports the signature IDS's per-attack-type accuracy, since unlike
+     the anomaly detector it actually predicts *which* attack it thinks it saw.
+  6. Saves a bar chart comparing the two detectors and prints a summary table.
+"""
+
+
 import pandas as pd
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 import matplotlib
